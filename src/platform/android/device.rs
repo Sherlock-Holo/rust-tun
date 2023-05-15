@@ -39,7 +39,7 @@ impl Device {
             let tun = Fd::new(fd).map_err(|_| io::Error::last_os_error())?;
 
             Device {
-                queue: Queue { tun: tun },
+                queue: Queue { tun },
             }
         };
         Ok(device)
@@ -147,6 +147,10 @@ impl D for Device {
         }
 
         Some(&mut self.queue)
+    }
+
+    fn queues(self) -> Vec<Self::Queue> {
+        vec![self.queue]
     }
 }
 

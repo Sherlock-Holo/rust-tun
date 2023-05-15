@@ -14,19 +14,30 @@
 
 //! Async specific modules.
 
-use crate::error;
-
 use crate::configuration::Configuration;
 use crate::platform::create;
+use crate::{error, Device};
 
-mod device;
+pub use self::codec::{TunPacket, TunPacketCodec};
 pub use self::device::{AsyncDevice, AsyncQueue};
 
 mod codec;
-pub use self::codec::{TunPacket, TunPacketCodec};
+mod device;
 
-/// Create a TUN device with the given name.
+/// Create a TUN device with the given configuration.
 pub fn create_as_async(configuration: &Configuration) -> Result<AsyncDevice, error::Error> {
-    let device = create(&configuration)?;
-    AsyncDevice::new(device).map_err(|err| err.into())
+    AsyncDevice::new(create(configuration)?).map_err(|err| err.into())
+}
+
+/// Create TUN device queues with the given configuration.
+pub fn create_queue_as_async(
+    configuration: &Configuration,
+) -> Result<Vec<AsyncQueue>, error::Error> {
+    let device = create(configuration)?;
+
+    device
+        .queues()
+        .into_iter()
+        .map(|queue| AsyncQueue::new(queue).map_err(Into::into))
+        .collect()
 }

@@ -148,6 +148,10 @@ impl D for Device {
 
         Some(&mut self.queue)
     }
+
+    fn queues(self) -> Vec<Self::Queue> {
+        vec![self.queue]
+    }
 }
 
 impl AsRawFd for Device {

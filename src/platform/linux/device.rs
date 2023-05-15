@@ -375,6 +375,10 @@ impl D for Device {
     fn queue(&mut self, index: usize) -> Option<&mut Self::Queue> {
         self.queues.get_mut(index)
     }
+
+    fn queues(self) -> Vec<Self::Queue> {
+        self.queues
+    }
 }
 
 impl AsRawFd for Device {

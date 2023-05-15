@@ -92,4 +92,6 @@ pub trait Device: Read + Write {
 
     /// Get a device queue.
     fn queue(&mut self, index: usize) -> Option<&mut Self::Queue>;
+
+    fn queues(self) -> Vec<Self::Queue>;
 }
