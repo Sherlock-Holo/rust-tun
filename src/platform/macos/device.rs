@@ -27,7 +27,6 @@ use libc::{c_char, c_uint, c_void, sockaddr, socklen_t, AF_INET, SOCK_DGRAM};
 use crate::configuration::{Configuration, Layer};
 use crate::device::Device as D;
 use crate::error::*;
-use crate::platform::macos::sys::*;
 use crate::platform::posix::{self, Fd, SockAddr};
 
 /// A TUN device using the TUN macOS driver.
@@ -405,8 +404,8 @@ impl Queue {
         true
     }
 
-    pub fn set_nonblock(&self) -> io::Result<()> {
-        self.tun.set_nonblock()
+    pub fn set_nonblock(&self, nonblock: bool) -> io::Result<()> {
+        self.tun.set_nonblock(nonblock)
     }
 }
 

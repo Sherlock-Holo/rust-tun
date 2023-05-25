@@ -176,8 +176,8 @@ impl Queue {
         false
     }
 
-    pub fn set_nonblock(&self) -> io::Result<()> {
-        self.tun.set_nonblock()
+    pub fn set_nonblock(&self, nonblock: bool) -> io::Result<()> {
+        self.tun.set_nonblock(nonblock)
     }
 }
 

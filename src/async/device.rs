@@ -12,11 +12,12 @@
 //
 //  0. You just DO WHAT THE FUCK YOU WANT TO.
 
-use std::io;
-use std::io::{IoSlice, Read, Write};
-
 use core::pin::Pin;
 use core::task::{Context, Poll};
+use std::io;
+use std::io::{IoSlice, Read, Write};
+use std::os::fd::{FromRawFd, IntoRawFd, OwnedFd};
+
 use futures_core::ready;
 use tokio::io::unix::AsyncFd;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
@@ -34,7 +35,7 @@ pub struct AsyncDevice {
 impl AsyncDevice {
     /// Create a new `AsyncDevice` wrapping around a `Device`.
     pub fn new(device: Device) -> io::Result<AsyncDevice> {
-        device.set_nonblock()?;
+        device.set_nonblock(true)?;
         Ok(AsyncDevice {
             inner: AsyncFd::new(device)?,
         })
@@ -54,6 +55,15 @@ impl AsyncDevice {
         let pi = self.get_mut().has_packet_information();
         let codec = TunPacketCodec::new(pi, self.inner.get_ref().mtu().unwrap_or(1504));
         Framed::new(self, codec)
+    }
+}
+
+impl From<AsyncDevice> for OwnedFd {
+    fn from(value: AsyncDevice) -> Self {
+        let device = value.inner.into_inner();
+
+        // Safety: we take the ownership
+        unsafe { OwnedFd::from_raw_fd(device.into_raw_fd()) }
     }
 }
 
@@ -130,7 +140,7 @@ pub struct AsyncQueue {
 impl AsyncQueue {
     /// Create a new `AsyncQueue` wrapping around a `Queue`.
     pub fn new(queue: Queue) -> io::Result<AsyncQueue> {
-        queue.set_nonblock()?;
+        queue.set_nonblock(true)?;
         Ok(AsyncQueue {
             inner: AsyncFd::new(queue)?,
         })
@@ -150,6 +160,13 @@ impl AsyncQueue {
         let pi = self.get_mut().has_packet_information();
         let codec = TunPacketCodec::new(pi, 1504);
         Framed::new(self, codec)
+    }
+}
+
+impl From<AsyncQueue> for OwnedFd {
+    fn from(value: AsyncQueue) -> Self {
+        // Safety: we take the ownership
+        unsafe { OwnedFd::from_raw_fd(value.inner.into_inner().into_raw_fd()) }
     }
 }
 

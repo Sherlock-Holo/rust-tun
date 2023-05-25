@@ -16,6 +16,7 @@ use std::ffi::{CStr, CString};
 use std::io::{self, Read, Write};
 use std::mem;
 use std::net::Ipv4Addr;
+use std::os::fd::{FromRawFd, OwnedFd};
 use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
 use std::ptr;
 use std::vec::Vec;
@@ -164,8 +165,15 @@ impl Device {
     }
 
     /// Set non-blocking mode
-    pub fn set_nonblock(&self) -> io::Result<()> {
-        self.queues[0].set_nonblock()
+    pub fn set_nonblock(&self, nonblock: bool) -> io::Result<()> {
+        self.queues[0].set_nonblock(nonblock)
+    }
+}
+
+impl From<Device> for OwnedFd {
+    fn from(value: Device) -> Self {
+        // Safety: we take the ownership
+        unsafe { OwnedFd::from_raw_fd(value.into_raw_fd()) }
     }
 }
 
@@ -405,8 +413,8 @@ impl Queue {
         self.pi_enabled
     }
 
-    pub fn set_nonblock(&self) -> io::Result<()> {
-        self.tun.set_nonblock()
+    pub fn set_nonblock(&self, nonblock: bool) -> io::Result<()> {
+        self.tun.set_nonblock(nonblock)
     }
 }
 
@@ -443,6 +451,13 @@ impl AsRawFd for Queue {
 impl IntoRawFd for Queue {
     fn into_raw_fd(self) -> RawFd {
         self.tun.into_raw_fd()
+    }
+}
+
+impl From<Queue> for OwnedFd {
+    fn from(value: Queue) -> Self {
+        // Safety: we tke the ownership
+        unsafe { OwnedFd::from_raw_fd(value.into_raw_fd()) }
     }
 }
 
