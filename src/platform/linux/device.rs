@@ -16,7 +16,7 @@ use std::ffi::{CStr, CString};
 use std::io::{self, Read, Write};
 use std::mem;
 use std::net::Ipv4Addr;
-use std::os::fd::{FromRawFd, OwnedFd};
+use std::os::fd::{AsFd, BorrowedFd, FromRawFd, OwnedFd};
 use std::os::unix::io::{AsRawFd, IntoRawFd, RawFd};
 use std::ptr;
 use std::vec::Vec;
@@ -400,6 +400,13 @@ impl IntoRawFd for Device {
         // It is Ok to swap the first queue with the last one, because the self will be dropped afterwards
         let queue = self.queues.swap_remove(0);
         queue.into_raw_fd()
+    }
+}
+
+impl AsFd for Device {
+    fn as_fd(&self) -> BorrowedFd<'_> {
+        // Safety: we have the fd
+        unsafe { BorrowedFd::borrow_raw(self.as_raw_fd()) }
     }
 }
 
